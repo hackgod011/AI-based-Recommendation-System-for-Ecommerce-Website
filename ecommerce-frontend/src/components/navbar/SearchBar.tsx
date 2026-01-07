@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, TrendingUp, Clock, X, Loader2 } from "lucide-react";
 
 interface Product {
   asin: string;
   title: string;
   image: string;
   price?: string;
+  rating?: string;
+  reviews?: string;
 }
 
 export default function SearchBar() {
@@ -15,14 +19,39 @@ export default function SearchBar() {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-
+  
+  // Cache to store previous search results
+  const cacheRef = useRef<Map<string, Product[]>>(new Map());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Recent searches (stored in localStorage in real app)
+  const [recentSearches] = useState<string[]>([
+    "Wireless Headphones",
+    "Smart Watch",
+    "Laptop"
+  ]);
+  
+  const [trendingSearches] = useState<string[]>([
+    "Gaming Mouse",
+    "Phone Cases",
+    "Power Banks"
+  ]);
+
   /* =========================
-     FETCH SEARCH RESULTS
+     FETCH SEARCH RESULTS WITH CACHING
   ========================== */
   async function fetchResults(search: string) {
+    // Check cache first
+    const cached = cacheRef.current.get(search.toLowerCase());
+    if (cached) {
+      setResults(cached);
+      setIsOpen(true);
+      setActiveIndex(-1);
+      return;
+    }
+
+    // Abort previous request
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -33,28 +62,34 @@ export default function SearchBar() {
     try {
       setLoading(true);
 
-      const res = await fetch(`/api/search?q=${search}`, {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(search)}`, {
         signal: controller.signal,
       });
 
+      if (!res.ok) throw new Error('Search failed');
+
       const data = await res.json();
-      setResults(data.products || []);
+      const products = data.products || [];
+      
+      // Cache the results
+      cacheRef.current.set(search.toLowerCase(), products);
+      
+      setResults(products);
       setIsOpen(true);
       setActiveIndex(-1);
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") {
         return;
       }
-      console.error(err);
+      console.error("Search error:", err);
       setResults([]);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   }
 
   /* =========================
-     DEBOUNCE INPUT
+     DEBOUNCE INPUT (Reduced to 250ms for faster response)
   ========================== */
   useEffect(() => {
     if (debounceRef.current) {
@@ -63,12 +98,16 @@ export default function SearchBar() {
 
     if (query.trim().length < 2) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
+    // Show loading immediately
+    setLoading(true);
+
     debounceRef.current = setTimeout(() => {
       fetchResults(query.trim());
-    }, 400);
+    }, 250); // Reduced from 400ms to 250ms
 
     return () => {
       if (debounceRef.current) {
@@ -84,17 +123,22 @@ export default function SearchBar() {
     if (!isOpen || results.length === 0) return;
 
     if (e.key === "ArrowDown") {
+      e.preventDefault();
       setActiveIndex((prev) => (prev + 1) % results.length);
     }
 
     if (e.key === "ArrowUp") {
-      setActiveIndex((prev) =>
-        prev <= 0 ? results.length - 1 : prev - 1
-      );
+      e.preventDefault();
+      setActiveIndex((prev) => (prev <= 0 ? results.length - 1 : prev - 1));
     }
 
     if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
       selectItem(results[activeIndex]);
+    }
+
+    if (e.key === "Escape") {
+      setIsOpen(false);
     }
   }
 
@@ -102,70 +146,211 @@ export default function SearchBar() {
      SELECT ITEM
   ========================== */
   function selectItem(item: Product) {
+    console.log("Selected product:", item);
+    // TODO: Navigate to product detail page
+    // router.push(`/product/${item.asin}`);
     setQuery(item.title);
     setIsOpen(false);
+  }
+
+  /* =========================
+     SELECT SUGGESTION
+  ========================== */
+  function selectSuggestion(suggestion: string) {
+    setQuery(suggestion);
+    fetchResults(suggestion);
+  }
+
+  /* =========================
+     CLEAR SEARCH
+  ========================== */
+  function clearSearch() {
+    setQuery("");
     setResults([]);
+    setIsOpen(false);
   }
 
   /* =========================
      HIGHLIGHT MATCH
   ========================== */
   function highlight(text: string, q: string) {
-    const regex = new RegExp(`(${q})`, "gi");
-    return text.split(regex).map((part, i) =>
-      part.toLowerCase() === q.toLowerCase() ? (
+    if (!q.trim()) return text;
+    const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi");
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) =>
+      regex.test(part) ? (
         <span key={i} className="font-semibold text-amber-400">
           {part}
         </span>
       ) : (
-        part
+        <span key={i}>{part}</span>
       )
     );
   }
 
   return (
-    <div className="relative w-full max-w-xl">
+    <div className="relative w-full">
       {/* SEARCH INPUT */}
-      <div className="flex items-center bg-white rounded-md overflow-hidden">
+      <div className="flex items-center bg-white rounded-md overflow-hidden shadow-sm">
+        <Search className="w-5 h-5 text-gray-400 ml-3" />
+        
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
-          onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder="Search Amazon products..."
-          className="flex-1 px-3 py-2 text-sm text-black outline-none"
+          className="flex-1 px-3 py-2.5 text-sm text-black outline-none"
         />
-        <button className="bg-amber-400 px-4 py-2 hover:bg-amber-500">
-          🔍
+
+        {/* Loading Spinner or Clear Button */}
+        {loading ? (
+          <Loader2 className="w-5 h-5 text-gray-400 mr-3 animate-spin" />
+        ) : query ? (
+          <button
+            onClick={clearSearch}
+            className="mr-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        ) : null}
+
+        <button className="bg-amber-400 px-5 py-2.5 hover:bg-amber-500 transition-colors">
+          <Search className="w-5 h-5 text-gray-900" />
         </button>
       </div>
 
       {/* DROPDOWN */}
-      {isOpen && !loading && results.length > 0 && (
-        <div className="absolute top-full left-0 z-[9999] w-full bg-neutral-900 mt-1 rounded-md shadow-xl">
-          {results.slice(0, 5).map((item, index) => (
-            <div
-              key={item.asin}
-              onMouseDown={() => selectItem(item)}
-              className={`flex gap-2 p-2 cursor-pointer ${
-                index === activeIndex
-                  ? "bg-neutral-800"
-                  : "hover:bg-neutral-800"
-              }`}
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                className="w-10 h-10 object-contain"
-              />
-              <span className="text-sm text-white">
-                {highlight(item.title, query)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 z-[9999] w-full bg-white mt-2 rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+          >
+            {/* Show suggestions when no query */}
+            {!query && (
+              <div className="p-4">
+                {/* Recent Searches */}
+                {recentSearches.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase mb-2">
+                      <Clock className="w-4 h-4" />
+                      Recent Searches
+                    </div>
+                    <div className="space-y-1">
+                      {recentSearches.map((search, i) => (
+                        <motion.button
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          onMouseDown={() => selectSuggestion(search)}
+                          className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded-md text-sm text-gray-700 transition-colors"
+                        >
+                          {search}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Trending Searches */}
+                {trendingSearches.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase mb-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Trending Searches
+                    </div>
+                    <div className="space-y-1">
+                      {trendingSearches.map((search, i) => (
+                        <motion.button
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          onMouseDown={() => selectSuggestion(search)}
+                          className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded-md text-sm text-gray-700 transition-colors"
+                        >
+                          {search}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Show results when searching */}
+            {query && results.length > 0 && (
+              <div className="max-h-[400px] overflow-y-auto">
+                {results.slice(0, 6).map((item, index) => (
+                  <motion.div
+                    key={item.asin}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    onMouseDown={() => selectItem(item)}
+                    className={`flex gap-3 p-3 cursor-pointer transition-colors ${
+                      index === activeIndex
+                        ? "bg-amber-50"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    {/* Product Image */}
+                    <div className="w-16 h-16 flex-shrink-0 bg-white border border-gray-200 rounded overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 line-clamp-2 mb-1">
+                        {highlight(item.title, query)}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        {item.price && (
+                          <span className="text-sm font-semibold text-gray-900">
+                            {item.price}
+                          </span>
+                        )}
+                        {item.rating && (
+                          <span className="text-xs text-gray-500">
+                            ⭐ {item.rating}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* No Results */}
+            {query && !loading && results.length === 0 && (
+              <div className="p-6 text-center text-gray-500 text-sm">
+                No products found for "{query}"
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading && query && (
+              <div className="p-6 text-center">
+                <Loader2 className="w-6 h-6 text-amber-400 animate-spin mx-auto" />
+                <p className="text-sm text-gray-500 mt-2">Searching...</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
