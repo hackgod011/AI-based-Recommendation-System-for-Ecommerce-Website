@@ -1,45 +1,86 @@
 import { useState } from 'react';
-import { Star, ShoppingCart, Heart, Share2, MapPin, Check } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Star, ShoppingCart, Heart, Share2, MapPin, Check, Loader2, AlertCircle } from 'lucide-react';
+import { useProduct } from '@/hooks/useProducts';
+import { useCart } from '@/hooks/useCart';
+import { ProductCardSkeleton } from '@/components/ui/LoadingSkeleton';
 
-// This would typically come from your API/props
-type ProductDetailProps = {
-  id: string;
-  title: string;
-  images: string[];
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  inStock: boolean;
-  description: string;
-  features: string[];
-  brand?: string;
-  category?: string;
-};
-
-export default function ProductDetailPage({
-  id = 'prod-123',
-  title = 'Premium Wireless Headphones - Noise Cancelling',
-  images = ['/images/products/headphone-1.jpg', '/images/products/headphone-2.jpg'],
-  price = 4999,
-  originalPrice = 7999,
-  rating = 4.5,
-  reviewCount = 2847,
-  inStock = true,
-  description = 'Experience premium sound quality with our wireless headphones featuring advanced noise cancellation technology.',
-  features = [
-    'Active Noise Cancellation',
-    '30-hour battery life',
-    'Premium comfort fit',
-    'Bluetooth 5.0 connectivity',
-    'Built-in microphone for calls'
-  ],
-  brand = 'TechAudio',
-  category = 'Electronics'
-}: Partial<ProductDetailProps>) {
+export default function ProductDetailPage() {
+  const { productId } = useParams<{ productId: string }>();
+  const { data: product, isLoading, isError, error } = useProduct(productId || '');
+  const { addToCart } = useCart();
+  
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <div className="max-w-[1500px] mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <div className="bg-white border border-gray-200 rounded-sm p-4 mb-4">
+                <div className="w-full h-[400px] bg-gray-200 animate-pulse" />
+              </div>
+            </div>
+            <div className="lg:col-span-2">
+              <div className="h-8 bg-gray-200 animate-pulse rounded mb-4" />
+              <div className="h-4 bg-gray-200 animate-pulse rounded mb-2" />
+              <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError || !product) {
+    return (
+      <div className="bg-white min-h-screen">
+        <div className="max-w-[1500px] mx-auto px-4 py-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-red-900 mb-2">
+              Error Loading Product
+            </h3>
+            <p className="text-red-700 mb-4">
+              {error instanceof Error ? error.message : 'Failed to load product details'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Use product data from API
+  const images = product.image ? [product.image] : ['/images/products/placeholder.jpg'];
+  const price = product.price || 0;
+  const originalPrice = product.originalPrice;
+  const rating = product.rating || 0;
+  const reviewCount = product.reviewCount || 0;
+  const inStock = true; // Assume in stock if product exists
+  const title = product.title || 'Product';
+  const description = product.title || 'No description available.';
+  
+  // Generate features from product data
+  const features = [
+    product.isBestSeller && 'Best Seller',
+    product.isAmazonChoice && "Amazon's Choice",
+    'High quality product',
+    'Fast shipping available',
+    'Customer support included'
+  ].filter(Boolean) as string[];
+  
+  const category = 'Electronics'; // Default category
 
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
@@ -77,9 +118,13 @@ export default function ProductDetailPage({
             {/* Main Image */}
             <div className="bg-white border border-gray-200 rounded-sm p-4 mb-4">
               <img
-                src={images[selectedImage]}
+                src={images[selectedImage] || '/images/products/placeholder.jpg'}
                 alt={title}
                 className="w-full h-[400px] object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/images/products/placeholder.jpg';
+                }}
               />
             </div>
 
@@ -94,9 +139,13 @@ export default function ProductDetailPage({
                   }`}
                 >
                   <img
-                    src={img}
+                    src={img || '/images/products/placeholder.jpg'}
                     alt={`${title} view ${index + 1}`}
                     className="w-16 h-16 object-contain p-1"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/images/products/placeholder.jpg';
+                    }}
                   />
                 </button>
               ))}
@@ -129,17 +178,25 @@ export default function ProductDetailPage({
               {/* Price */}
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-sm text-gray-600">M.R.P.:</span>
-                {originalPrice && (
-                  <span className="text-sm text-gray-600 line-through">₹{originalPrice}</span>
+                {originalPrice && originalPrice > price && (
+                  <span className="text-sm text-gray-600 line-through">₹{originalPrice.toLocaleString('en-IN')}</span>
                 )}
               </div>
-              <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-xs text-red-700">-{discount}%</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xs align-super text-gray-700">₹</span>
-                  <span className="text-3xl font-normal text-gray-900">{price}</span>
+              {discount > 0 && (
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span className="text-xs text-red-700">-{discount}%</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xs align-super text-gray-700">₹</span>
+                    <span className="text-3xl font-normal text-gray-900">{price.toLocaleString('en-IN')}</span>
+                  </div>
                 </div>
-              </div>
+              )}
+              {discount === 0 && (
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-xs align-super text-gray-700">₹</span>
+                  <span className="text-3xl font-normal text-gray-900">{price.toLocaleString('en-IN')}</span>
+                </div>
+              )}
 
               {/* Tax info */}
               <p className="text-xs text-gray-600 mb-4">Inclusive of all taxes</p>
@@ -180,7 +237,7 @@ export default function ProductDetailPage({
               {/* Price */}
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-xs align-super text-gray-700">₹</span>
-                <span className="text-3xl font-normal text-gray-900">{price}</span>
+                <span className="text-3xl font-normal text-gray-900">{price.toLocaleString('en-IN')}</span>
               </div>
               <p className="text-xs text-gray-600 mb-4">Inclusive of all taxes</p>
 
@@ -222,6 +279,14 @@ export default function ProductDetailPage({
               {/* Action Buttons */}
               <div className="space-y-2">
                 <button
+                  onClick={() => {
+                    addToCart({
+                      id: product.id,
+                      title: product.title,
+                      price: product.price,
+                      image: product.image
+                    });
+                  }}
                   disabled={!inStock}
                   className="w-full bg-[#ffd814] hover:bg-[#f7ca00] disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-900 py-2 px-4 rounded-full text-sm font-medium transition-colors"
                 >

@@ -44,10 +44,11 @@ export default function HomePage() {
               ) : (
                 recommendedProducts.map((item) => (
                   <ProductCard
-                    key={item.id}
+                    id={item.id}
                     image={item.image}
                     title={item.title}
                     price={item.price}
+                    category={item.category}
                     onClick={() => console.log('Product clicked:', item.id)}
                   />
                 ))
@@ -74,6 +75,7 @@ export default function HomePage() {
                     key={index}
                     image={item.image}
                     title={item.title}
+                    category={item.category}
                     onClick={() => console.log('Category clicked:', item.title)}
                   />
                 ))

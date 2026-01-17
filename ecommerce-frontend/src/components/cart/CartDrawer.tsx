@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
+import { useCart } from '@/hooks/useCart';
 
 type CartDrawerProps = {
   isOpen: boolean;
@@ -57,7 +57,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <img src={item.image} alt={item.title} className="w-20 h-20 object-contain" />
                     <div className="flex-1">
                       <h3 className="font-medium text-sm mb-1 line-clamp-2">{item.title}</h3>
-                      <p className="text-lg font-bold mb-2">₹{item.price}</p>
+                      <p className="text-lg font-bold mb-2">₹{item.price.toLocaleString('en-IN')}</p>
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}

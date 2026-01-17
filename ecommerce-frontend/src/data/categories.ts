@@ -1,35 +1,43 @@
 export const furnitureCategories = [
   {
     image: '/images/products/furniture/sofa.jpg',
-    title: 'Sofas'
+    title: 'Sofas',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/bed.jpg',
-    title: 'Beds'
+    title: 'Beds',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/dining-tables.jpg',
-    title: 'Dining Tables'
+    title: 'Dining Tables',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/wardrobes.jpg',
-    title: 'Wardrobes'
+    title: 'Wardrobes',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/chairs.jpg',
-    title: 'Chairs'
+    title: 'Chairs',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/study-tables.jpg',
-    title: 'Study Tables'
+    title: 'Study Tables',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/storage.jpg',
-    title: 'Storage Units'
+    title: 'Storage Units',
+    category: 'furniture'
   },
   {
     image: '/images/products/furniture/decor.jpg',
-    title: 'Home Decor'
+    title: 'Home Decor',
+    category: 'furniture'
   }
 ];
 

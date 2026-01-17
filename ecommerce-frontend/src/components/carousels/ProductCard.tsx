@@ -1,23 +1,40 @@
 import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Eye } from 'lucide-react';
 import { useState } from 'react';
-import { useCart } from '@/context/CartContext';
+import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/ToastNotification';
 import QuickViewModal from '@/components/modals/QuickViewModal';
+import { useNavigate } from 'react-router-dom';
 
 type ProductCardProps = {
   id: string;
   image: string;
   title: string;
   price: number;
+  category?: string;
   onClick?: () => void;
 };
 
-export default function ProductCard({ id, image, title, price, onClick }: ProductCardProps) {
+export default function ProductCard({ id, image, title, price, category, onClick }: ProductCardProps) {
+  const navigate = useNavigate();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
   const { addToCart } = useCart();
   const { showToast } = useToast();
+
+  // Handle card click - navigate to product detail OR category page
+  const handleClick = () => {
+    if (onClick) {
+      // If custom onClick is provided, use it
+      onClick();
+    } else if (category) {
+      // If category is provided, navigate to category page
+      navigate(`/category/${category}`);
+    } else {
+      // Default: navigate to product detail page
+      navigate(`/product/${id}`);
+    }
+  };
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -43,7 +60,7 @@ export default function ProductCard({ id, image, title, price, onClick }: Produc
     <>
       <motion.div 
         className="min-w-[220px] max-w-[220px] cursor-pointer group flex-shrink-0"
-        onClick={onClick}
+        onClick={handleClick}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -78,11 +95,15 @@ export default function ProductCard({ id, image, title, price, onClick }: Produc
           {/* Image */}
           <div className="relative w-full aspect-square bg-white flex items-center justify-center p-6 overflow-hidden">
             <motion.img
-              src={image}
+              src={image || '/images/products/placeholder.jpg'}
               alt={title}
               className="w-full h-full object-contain"
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.3 }}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/images/products/placeholder.jpg';
+              }}
             />
           </div>
           
@@ -95,7 +116,7 @@ export default function ProductCard({ id, image, title, price, onClick }: Produc
               <div className="flex items-baseline gap-1">
                 <span className="text-xs align-super text-gray-700">₹</span>
                 <span className="text-2xl font-normal text-gray-900">
-                  {price.toLocaleString()}
+                  {price.toLocaleString('en-IN')}
                 </span>
               </div>
 

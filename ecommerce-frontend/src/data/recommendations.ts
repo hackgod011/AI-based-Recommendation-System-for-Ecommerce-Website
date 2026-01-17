@@ -3,60 +3,70 @@ export const recommendedProducts = [
     id: 'prod-1',
     image: '/images/products/electronics/headphones.jpg',
     title: 'Premium Wireless Headphones with Active Noise Cancellation',
+    category:'electronics',
     price: 2499
   },
   {
     id: 'prod-2',
     image: '/images/products/electronics/smartwatch.jpg',
     title: 'Smart Watch with Heart Rate Monitor and GPS',
+    category:'electronics',
     price: 3999
   },
   {
     id: 'prod-3',
     image: '/images/products/electronics/bluetooth-speaker.jpg',
     title: 'Portable Bluetooth Speaker - Waterproof',
+    category:'electronics',
     price: 1799
   },
   {
     id: 'prod-4',
     image: '/images/products/electronics/wireless-mouse.jpg',
     title: 'Ergonomic Wireless Mouse for Laptop & PC',
+    category:'electronics',
     price: 699
   },
   {
     id: 'prod-5',
     image: '/images/products/electronics/phone-case.webp',
     title: 'Premium Leather Phone Case with Card Holder',
+    category:'electronics',
     price: 599
   },
   {
     id: 'prod-6',
     image: '/images/products/electronics/power-bank.jpg',
     title: '20000mAh Fast Charging Power Bank',
+    category:'electronics',
     price: 1299
   },
   {
     id: 'prod-7',
     image: '/images/products/electronics/webcam.jpg',
     title: 'HD Webcam with Microphone for Video Calls',
+    category:'electronics',
     price: 2499
   },
   {
     id: 'prod-8',
     image: '/images/products/electronics/keyboard.jpg',
     title: 'Mechanical Gaming Keyboard RGB Backlit',
+    category:'electronics',
     price: 3499
   },
   {
     id: 'prod-9',
     image: '/images/products/electronics/earbuds.jpg',
     title: 'True Wireless Earbuds with Charging Case',
+    category:'electronics',
     price: 1999
   },
   {
     id: 'prod-10',
     image: '/images/products/electronics/laptop-stand.webp',
     title: 'Adjustable Aluminum Laptop Stand',
+    category:'electronics',
     price: 1499
   }
 ];

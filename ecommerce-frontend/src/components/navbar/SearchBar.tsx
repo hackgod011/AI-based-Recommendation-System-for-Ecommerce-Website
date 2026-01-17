@@ -3,17 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, TrendingUp, Clock, X, Loader2 } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface Product {
   asin: string;
-  title: string;
-  image: string;
-  price?: string;
-  rating?: string;
-  reviews?: string;
+  product_title: string;
+  product_photo: string;
+  product_price?: string;
+  product_star_rating?: string;
+  product_num_ratings?: string;
 }
 
 export default function SearchBar() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,7 +91,7 @@ export default function SearchBar() {
   }
 
   /* =========================
-     DEBOUNCE INPUT (Reduced to 250ms for faster response)
+     DEBOUNCE INPUT
   ========================== */
   useEffect(() => {
     if (debounceRef.current) {
@@ -107,7 +109,7 @@ export default function SearchBar() {
 
     debounceRef.current = setTimeout(() => {
       fetchResults(query.trim());
-    }, 250); // Reduced from 400ms to 250ms
+    }, 250);
 
     return () => {
       if (debounceRef.current) {
@@ -147,9 +149,9 @@ export default function SearchBar() {
   ========================== */
   function selectItem(item: Product) {
     console.log("Selected product:", item);
-    // TODO: Navigate to product detail page
-    // router.push(`/product/${item.asin}`);
-    setQuery(item.title);
+    // Navigate to product detail page
+    navigate(`/product/${item.asin}`);
+    setQuery(item.product_title);
     setIsOpen(false);
   }
 
@@ -171,27 +173,64 @@ export default function SearchBar() {
   }
 
   /* =========================
-     HIGHLIGHT MATCH
+     HIGHLIGHT MATCH - FIXED
   ========================== */
   function highlight(text: string, q: string) {
-    if (!q.trim()) return text;
-    const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi");
-    const parts = text.split(regex);
+    // Safety check for undefined/null text
+    if (!text || typeof text !== 'string') return text || '';
+    if (!q || !q.trim()) return text;
     
-    return parts.map((part, i) =>
-      regex.test(part) ? (
-        <span key={i} className="font-semibold text-amber-400">
-          {part}
-        </span>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
+    try {
+      const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi");
+      const parts = text.split(regex);
+      
+      return parts.map((part, i) =>
+        regex.test(part) ? (
+          <span key={i} className="font-semibold text-amber-400">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      );
+    } catch (error) {
+      console.error('Highlight error:', error);
+      return text;
+    }
+  }
+
+  // Add search submit handler
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+      setIsOpen(false);
+    }
+  };
+
+  // Format price: Convert USD to INR and format with commas
+  function formatPrice(priceStr: string): string {
+    if (!priceStr) return '0';
+    
+    const USD_TO_INR = 83;
+    // Check if price contains $ or USD
+    const isUSD = priceStr.includes('$') || priceStr.toLowerCase().includes('usd');
+    let price = parseFloat(priceStr.replace(/[^0-9.]/g, '') || '0');
+    
+    if (isUSD && price > 0) {
+      price = Math.round(price * USD_TO_INR);
+    } else if (price > 0) {
+      // If already a number string, parse it
+      price = parseFloat(priceStr.replace(/[^0-9.]/g, '') || '0');
+    }
+    
+    return price.toLocaleString('en-IN');
   }
 
   return (
     <div className="relative w-full">
       {/* SEARCH INPUT */}
+      <form onSubmit={handleSearch}>
       <div className="flex items-center bg-white rounded-md overflow-hidden shadow-sm">
         <Search className="w-5 h-5 text-gray-400 ml-3" />
         
@@ -210,6 +249,7 @@ export default function SearchBar() {
           <Loader2 className="w-5 h-5 text-gray-400 mr-3 animate-spin" />
         ) : query ? (
           <button
+            type="button"
             onClick={clearSearch}
             className="mr-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
           >
@@ -217,10 +257,11 @@ export default function SearchBar() {
           </button>
         ) : null}
 
-        <button className="bg-amber-400 px-5 py-2.5 hover:bg-amber-500 transition-colors">
+        <button type="submit" className="bg-amber-400 px-5 py-2.5 hover:bg-amber-500 transition-colors">
           <Search className="w-5 h-5 text-gray-900" />
         </button>
       </div>
+      </form>
 
       {/* DROPDOWN */}
       <AnimatePresence>
@@ -304,8 +345,8 @@ export default function SearchBar() {
                     {/* Product Image */}
                     <div className="w-16 h-16 flex-shrink-0 bg-white border border-gray-200 rounded overflow-hidden">
                       <img
-                        src={item.image}
-                        alt={item.title}
+                        src={item.product_photo}
+                        alt={item.product_title}
                         className="w-full h-full object-contain"
                         loading="lazy"
                       />
@@ -314,17 +355,17 @@ export default function SearchBar() {
                     {/* Product Details */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 line-clamp-2 mb-1">
-                        {highlight(item.title, query)}
+                        {highlight(item.product_title, query)}
                       </p>
                       <div className="flex items-center gap-2">
-                        {item.price && (
+                        {item.product_price && (
                           <span className="text-sm font-semibold text-gray-900">
-                            {item.price}
+                            ₹{formatPrice(item.product_price)}
                           </span>
                         )}
-                        {item.rating && (
+                        {item.product_star_rating && (
                           <span className="text-xs text-gray-500">
-                            ⭐ {item.rating}
+                            ⭐ {item.product_star_rating}
                           </span>
                         )}
                       </div>

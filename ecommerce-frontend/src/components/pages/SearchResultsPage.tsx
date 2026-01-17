@@ -1,20 +1,22 @@
 import { useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { useInfiniteProducts } from '@/hooks/useProducts';
+import { useSearchParams } from 'react-router-dom';
+import { useInfiniteSearch } from '@/hooks/useProducts';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { FilterOptions } from '@/types/product';
 import ProductCard from '@/components/carousels/ProductCard';
 import FilterSidebar from '@/components/filters/FilterSidebar';
 import { ProductCardSkeleton } from '@/components/ui/LoadingSkeleton';
-import { AlertCircle } from 'lucide-react';
+import { Search, AlertCircle } from 'lucide-react';
 
-export default function CategoryPage() {
-  const { category } = useParams<{ category: string }>();
+export default function SearchResultsPage() {
+ const [searchParams] = useSearchParams();
+  const query = searchParams.get('q') || '';
+  
   const [filters, setFilters] = useState<FilterOptions>({
     sortBy: 'relevance'
   });
 
-  // Fetch products with infinite scroll
+  // Fetch search results with infinite scroll
   const {
     data,
     fetchNextPage,
@@ -23,9 +25,9 @@ export default function CategoryPage() {
     isLoading,
     isError,
     error
-  } = useInfiniteProducts(category || '', filters);
+  } = useInfiniteSearch(query, filters);
 
-  // Memoize the callback to prevent re-creating on every render
+  // Memoize the callback
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -43,12 +45,6 @@ export default function CategoryPage() {
     setFilters({ sortBy: 'relevance' });
   };
 
-  // Format category name for display
-  const categoryTitle = category
-    ?.split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ') || 'Products';
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-[1500px] mx-auto px-4 py-6">
@@ -56,13 +52,20 @@ export default function CategoryPage() {
         <div className="text-sm text-gray-600 mb-4">
           <a href="/" className="hover:text-[#007185]">Home</a>
           <span className="mx-2">/</span>
-          <span className="text-gray-900">{categoryTitle}</span>
+          <span className="text-gray-900">Search Results</span>
         </div>
 
-        {/* Page Title */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          {categoryTitle}
-        </h1>
+        {/* Search Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Search results for "{query}"
+          </h1>
+          {!isLoading && allProducts.length > 0 && (
+            <p className="text-gray-600">
+              {allProducts.length} results found
+            </p>
+          )}
+        </div>
 
         <div className="flex gap-6">
           {/* Filter Sidebar */}
@@ -73,7 +76,7 @@ export default function CategoryPage() {
             productCount={allProducts.length}
           />
 
-          {/* Products Grid */}
+          {/* Search Results Grid */}
           <div className="flex-1">
             {/* Loading State */}
             {isLoading && (
@@ -89,10 +92,10 @@ export default function CategoryPage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                 <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-red-900 mb-2">
-                  Error Loading Products
+                  Error Loading Results
                 </h3>
                 <p className="text-red-700 mb-4">
-                  {error instanceof Error ? error.message : 'Failed to load products'}
+                  {error instanceof Error ? error.message : 'Failed to load search results'}
                 </p>
                 <button
                   onClick={() => window.location.reload()}
@@ -103,18 +106,29 @@ export default function CategoryPage() {
               </div>
             )}
 
-            {/* Products */}
+            {/* Results */}
             {!isLoading && !isError && (
               <>
                 {allProducts.length === 0 ? (
                   <div className="bg-white rounded-lg p-12 text-center">
-                    <p className="text-gray-500 text-lg mb-2">No products found</p>
-                    <p className="text-gray-400 text-sm mb-4">
-                      Try adjusting your filters or search criteria
+                    <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No results found
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      We couldn't find any products matching "{query}"
                     </p>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>Try:</p>
+                      <ul className="list-disc list-inside">
+                        <li>Checking your spelling</li>
+                        <li>Using more general keywords</li>
+                        <li>Using fewer keywords</li>
+                      </ul>
+                    </div>
                     <button
                       onClick={handleClearFilters}
-                      className="text-[#007185] hover:text-[#C7511F] font-medium"
+                      className="mt-6 text-[#007185] hover:text-[#C7511F] font-medium"
                     >
                       Clear all filters
                     </button>
@@ -129,6 +143,9 @@ export default function CategoryPage() {
                           title={product.title}
                           price={product.price}
                           image={product.image}
+                          onClick={() => {
+                            window.location.href = `/product/${product.id}`;
+                          }}
                         />
                       ))}
                     </div>
@@ -152,7 +169,7 @@ export default function CategoryPage() {
                     {/* End Message */}
                     {!hasNextPage && allProducts.length > 0 && (
                       <div className="text-center py-8 text-gray-500">
-                        <p>You've viewed all products in this category</p>
+                        <p>You've viewed all search results</p>
                       </div>
                     )}
                   </>

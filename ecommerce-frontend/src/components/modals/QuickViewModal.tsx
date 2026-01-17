@@ -53,7 +53,7 @@ export default function QuickViewModal({ isOpen, onClose, product }: QuickViewMo
                   <h2 className="text-2xl font-bold mb-4">{product.title}</h2>
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-xs align-super">₹</span>
-                    <span className="text-3xl font-bold">{product.price}</span>
+                    <span className="text-3xl font-bold">{product.price.toLocaleString('en-IN')}</span>
                   </div>
                   <p className="text-gray-600 mb-6">{product.description}</p>
                   
