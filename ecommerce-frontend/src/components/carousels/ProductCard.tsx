@@ -1,9 +1,7 @@
-import { motion } from 'framer-motion';
-import { ShoppingCart, Heart, Eye } from 'lucide-react';
-import { useState } from 'react';
-import { useCart } from '@/hooks/useCart';
+import { Heart, ShoppingCart } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
 import { useToast } from '@/components/ui/ToastNotification';
-import QuickViewModal from '@/components/modals/QuickViewModal';
+import { useWishlist } from '@/context/WishlistContext';
 import { useNavigate } from 'react-router-dom';
 
 type ProductCardProps = {
@@ -17,137 +15,89 @@ type ProductCardProps = {
 
 export default function ProductCard({ id, image, title, price, category, onClick }: ProductCardProps) {
   const navigate = useNavigate();
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [showQuickView, setShowQuickView] = useState(false);
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const wishlisted = isInWishlist(id);
 
-  // Handle card click - navigate to product detail OR category page
   const handleClick = () => {
     if (onClick) {
-      // If custom onClick is provided, use it
       onClick();
-    } else if (category) {
-      // If category is provided, navigate to category page
+    } else if (category && !onClick) {
       navigate(`/category/${category}`);
     } else {
-      // Default: navigate to product detail page
       navigate(`/product/${id}`);
     }
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
-    showToast(
-      isWishlisted ? 'warning' : 'success',
-      isWishlisted ? 'Removed from wishlist' : 'Added to wishlist'
-    );
+    if (wishlisted) {
+      removeFromWishlist(id);
+      showToast('warning', 'Removed from wishlist');
+    } else {
+      addToWishlist({ product_id: id, title, price, image });
+      showToast('success', 'Added to wishlist');
+    }
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart({ id, title, price, image });
-    showToast('success', 'Added to cart!');
-  };
-
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowQuickView(true);
+    addToCart({ product_id: id, title, price, image });
+    showToast('success', 'Added to cart');
   };
 
   return (
-    <>
-      <motion.div 
-        className="min-w-[220px] max-w-[220px] cursor-pointer group flex-shrink-0"
-        onClick={handleClick}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        whileHover={{ y: -4 }}
-      >
-        <div className="bg-white rounded-sm overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 relative">
-          {/* Action Buttons */}
-          <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
-            <motion.button
-              onClick={handleWishlist}
-              className="bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Heart 
-                className={`w-4 h-4 transition-colors ${
-                  isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'
-                }`}
-              />
-            </motion.button>
+    <div
+      className="group cursor-pointer min-w-[200px] max-w-[200px] flex-shrink-0"
+      onClick={handleClick}
+    >
+      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:border-neutral-300 hover:shadow-md transition-all duration-200">
+        {/* Image */}
+        <div className="relative aspect-square bg-neutral-50 overflow-hidden">
+          <img
+            src={image || 'https://via.placeholder.com/200'}
+            alt={title}
+            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200';
+            }}
+          />
 
-            <motion.button
-              onClick={handleQuickView}
-              className="bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow opacity-0 group-hover:opacity-100"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Eye className="w-4 h-4 text-gray-600" />
-            </motion.button>
-          </div>
-
-          {/* Image */}
-          <div className="relative w-full aspect-square bg-white flex items-center justify-center p-6 overflow-hidden">
-            <motion.img
-              src={image || '/images/products/placeholder.jpg'}
-              alt={title}
-              className="w-full h-full object-contain"
-              whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/images/products/placeholder.jpg';
-              }}
+          {/* Wishlist button — always visible on mobile, hover on desktop */}
+          <button
+            onClick={handleWishlist}
+            className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm border border-neutral-100 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+          >
+            <Heart
+              className={`h-3.5 w-3.5 transition-colors ${
+                wishlisted ? 'fill-red-500 text-red-500' : 'text-neutral-500'
+              }`}
             />
-          </div>
-          
-          <div className="p-4">
-            <p className="text-sm text-gray-700 line-clamp-2 h-[40px] mb-3">
-              {title}
-            </p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-1">
-                <span className="text-xs align-super text-gray-700">₹</span>
-                <span className="text-2xl font-normal text-gray-900">
-                  {price.toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              {/* Quick Add to Cart */}
-              <motion.button
-                onClick={handleAddToCart}
-                className="opacity-0 group-hover:opacity-100 bg-[#ffd814] hover:bg-[#f7ca00] p-2 rounded-full transition-all"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <ShoppingCart className="w-4 h-4 text-gray-900" />
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Shimmer effect */}
-          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+          </button>
         </div>
-      </motion.div>
 
-      {/* Quick View Modal */}
-      <QuickViewModal
-        isOpen={showQuickView}
-        onClose={() => setShowQuickView(false)}
-        product={{
-          image,
-          title,
-          price,
-          description: 'High-quality product with excellent features and great value for money.'
-        }}
-      />
-    </>
+        {/* Info */}
+        <div className="px-3 pt-2.5 pb-3">
+          <p className="text-xs text-neutral-700 line-clamp-2 leading-snug min-h-[2.5rem]">
+            {title}
+          </p>
+
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-sm font-semibold text-neutral-900">
+              ₹{price.toLocaleString('en-IN')}
+            </span>
+
+            <button
+              onClick={handleAddToCart}
+              className="opacity-0 group-hover:opacity-100 flex items-center gap-1 bg-teal-500 hover:bg-teal-600 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all"
+            >
+              <ShoppingCart className="h-3 w-3" />
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

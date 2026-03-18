@@ -240,7 +240,7 @@ export default function SearchBar() {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-          placeholder="Search Amazon products..."
+          placeholder="Search products..."
           className="flex-1 px-3 py-2.5 text-sm text-black outline-none"
         />
 

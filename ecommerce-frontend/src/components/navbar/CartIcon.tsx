@@ -1,6 +1,6 @@
 import { ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
-import { useCart } from '@/hooks/useCart';
+import { useCart } from '@/context/CartContext';
 import CartDrawer from '@/components/cart/CartDrawer';
 
 export default function CartIcon() {

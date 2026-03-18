@@ -54,7 +54,7 @@ export default function CategoryPage() {
       <div className="max-w-[1500px] mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-600 mb-4">
-          <a href="/" className="hover:text-[#007185]">Home</a>
+          <a href="/" className="hover:text-teal-600">Home</a>
           <span className="mx-2">/</span>
           <span className="text-gray-900">{categoryTitle}</span>
         </div>
@@ -114,7 +114,7 @@ export default function CategoryPage() {
                     </p>
                     <button
                       onClick={handleClearFilters}
-                      className="text-[#007185] hover:text-[#C7511F] font-medium"
+                      className="text-teal-600 hover:text-teal-700 font-medium"
                     >
                       Clear all filters
                     </button>

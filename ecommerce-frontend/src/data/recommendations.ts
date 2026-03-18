@@ -1,84 +1,72 @@
 export const recommendedProducts = [
   {
-    id: 'prod-1',
-    image: '/images/products/electronics/headphones.jpg',
+    id: 'B07G4KWFST',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80',
     title: 'Premium Wireless Headphones with Active Noise Cancellation',
-    category:'electronics',
+    category: 'electronics',
     price: 2499
   },
   {
-    id: 'prod-2',
-    image: '/images/products/electronics/smartwatch.jpg',
+    id: 'B08DFPV5YB',
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80',
     title: 'Smart Watch with Heart Rate Monitor and GPS',
-    category:'electronics',
+    category: 'electronics',
     price: 3999
   },
   {
-    id: 'prod-3',
-    image: '/images/products/electronics/bluetooth-speaker.jpg',
-    title: 'Portable Bluetooth Speaker - Waterproof',
-    category:'electronics',
+    id: 'B07NM3RSRQ',
+    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&q=80',
+    title: 'Portable Bluetooth Speaker — Waterproof, 20hr Battery',
+    category: 'electronics',
     price: 1799
   },
   {
-    id: 'prod-4',
-    image: '/images/products/electronics/wireless-mouse.jpg',
-    title: 'Ergonomic Wireless Mouse for Laptop & PC',
-    category:'electronics',
+    id: 'B09B2BLXS6',
+    image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80',
+    title: 'Ergonomic Wireless Mouse for Laptop and PC',
+    category: 'electronics',
     price: 699
   },
   {
-    id: 'prod-5',
-    image: '/images/products/electronics/phone-case.webp',
-    title: 'Premium Leather Phone Case with Card Holder',
-    category:'electronics',
-    price: 599
-  },
-  {
-    id: 'prod-6',
-    image: '/images/products/electronics/power-bank.jpg',
-    title: '20000mAh Fast Charging Power Bank',
-    category:'electronics',
+    id: 'B09TPHLW4Y',
+    image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400&q=80',
+    title: '20000mAh Fast Charging Power Bank with USB-C',
+    category: 'electronics',
     price: 1299
   },
   {
-    id: 'prod-7',
-    image: '/images/products/electronics/webcam.jpg',
-    title: 'HD Webcam with Microphone for Video Calls',
-    category:'electronics',
-    price: 2499
-  },
-  {
-    id: 'prod-8',
-    image: '/images/products/electronics/keyboard.jpg',
-    title: 'Mechanical Gaming Keyboard RGB Backlit',
-    category:'electronics',
+    id: 'B08CWLT1TD',
+    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&q=80',
+    title: 'Mechanical Gaming Keyboard RGB Backlit TKL',
+    category: 'electronics',
     price: 3499
   },
   {
-    id: 'prod-9',
-    image: '/images/products/electronics/earbuds.jpg',
-    title: 'True Wireless Earbuds with Charging Case',
-    category:'electronics',
+    id: 'B09MFMTPXN',
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&q=80',
+    title: 'True Wireless Earbuds with Active Noise Cancellation',
+    category: 'electronics',
     price: 1999
   },
   {
-    id: 'prod-10',
-    image: '/images/products/electronics/laptop-stand.webp',
-    title: 'Adjustable Aluminum Laptop Stand',
-    category:'electronics',
+    id: 'B07F4TLWMK',
+    image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80',
+    title: 'Adjustable Aluminum Laptop Stand — Multiple Angles',
+    category: 'electronics',
     price: 1499
+  },
+  {
+    id: 'B07XVXB5YD',
+    image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400&q=80',
+    title: 'Running Shoes Lightweight Breathable Sports',
+    category: 'sports',
+    price: 2299
+  },
+  {
+    id: 'B08LHKV8GL',
+    image: 'https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?w=400&q=80',
+    title: 'Yoga Mat Non-Slip 6mm Thick with Carry Strap',
+    category: 'sports',
+    price: 849
   }
 ];
-
-// Placeholder Unsplash URLs you can use:
-// Headphones: https://images.unsplash.com/photo-1505740420928-5e560c06d30e
-// Smartwatch: https://images.unsplash.com/photo-1523275335684-37898b6baf30
-// Speaker: https://images.unsplash.com/photo-1608043152269-423dbba4e7e1
-// Mouse: https://images.unsplash.com/photo-1527864550417-7fd91fc51a46
-// Phone Case: https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb
-// Power Bank: https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5
-// Webcam: https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04
-// Keyboard: https://images.unsplash.com/photo-1587829741301-dc798b83add3
-// Earbuds: https://images.unsplash.com/photo-1590658268037-6bf12165a8df
-// Laptop Stand: https://images.unsplash.com/photo-1527864550417-7fd91fc51a46

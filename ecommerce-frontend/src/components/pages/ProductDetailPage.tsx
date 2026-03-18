@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Share2, MapPin, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useProduct } from '@/hooks/useProducts';
-import { useCart } from '@/hooks/useCart';
+import { useCart } from '@/context/CartContext';
 import { ProductCardSkeleton } from '@/components/ui/LoadingSkeleton';
 
 export default function ProductDetailPage() {
